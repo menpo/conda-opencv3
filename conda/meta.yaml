@@ -19,14 +19,14 @@ requirements:
    - wget 1.16.3  # [win]
    - cmake 3.3.0  # [win]
    - numpy
-   - eigen
-   - tbb  # [osx]
-   - msinttypes  # [win]
+   - eigen 3.2.2
+   - tbb 4.3_20141023  # [osx]
+   - msinttypes r26  # [win]
 
   run:
    - python
    - numpy
-   - tbb  # [osx]
+   - tbb 4.3_20141023  # [osx]
 
 test:
   imports:

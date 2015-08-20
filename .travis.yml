@@ -1,0 +1,23 @@
+sudo: false
+
+env:
+  global:
+    - BINSTAR_USER: menpo
+  matrix:
+    - PYTHON_VERSION: 2.7
+    - PYTHON_VERSION: 3.4
+
+install:
+- wget https://raw.githubusercontent.com/menpo/condaci/v0.4.6/condaci.py -O condaci.py
+- python condaci.py setup
+
+script:
+- ~/miniconda/bin/python condaci.py build ./conda
+
+notifications:
+  slack:
+    rooms:
+      - menpo:19gyWImMkOfCj0iDAgTbDlDA
+    on_success: :change
+    on_failure: :change
+  email: false
