@@ -1,0 +1,24 @@
+--- opencv_contrib-3.0.0\modules\ximgproc\src\seeds.cpp
++++ opencv_contrib-3.0.0\modules\ximgproc\src\seeds.cpp
+@@ -256,8 +256,8 @@
+         seeds_wf = (float)width / num_superpixels_w / (1<<(seeds_nr_levels-1));
+         seeds_hf = (float)height / num_superpixels_h / (1<<(seeds_nr_levels-1));
+     } while( seeds_wf < 1.f || seeds_hf < 1.f );
+-    int seeds_w = (int)ceil(seeds_wf);
+-    int seeds_h = (int)ceil(seeds_hf);
++    int seeds_w = (int)ceil((float)seeds_wf);
++    int seeds_h = (int)ceil((float)seeds_hf);
+     CV_Assert(seeds_nr_levels > 0);
+ 
+     seeds_top_level = seeds_nr_levels - 1;
+@@ -273,8 +273,8 @@
+     parent_pre_init.resize(seeds_nr_levels);
+     nr_wh.resize(2 * seeds_nr_levels);
+     int level = 0;
+-    int nr_seeds_w = (int)floor(width / seeds_w);
+-    int nr_seeds_h = (int)floor(height / seeds_h);
++    int nr_seeds_w = (int)floor((float)width / seeds_w);
++    int nr_seeds_h = (int)floor((float)height / seeds_h);
+     nr_wh[2 * level] = nr_seeds_w;
+     nr_wh[2 * level + 1] = nr_seeds_h;
+     parent_mat.push_back(Mat(nr_seeds_h, nr_seeds_w, CV_32SC1));

@@ -1,0 +1,38 @@
+package:
+  name: opencv3
+  version: 3.0.0
+
+source:
+  fn: opencv-3.0.0.tar.gz
+  url: https://github.com/Itseez/opencv/archive/3.0.0.tar.gz
+  sha256: da51a4e459b0bcbe14fb847c4f168415f421765fb91996f42b9e1ce0575f05d5
+  
+  patches:
+    - cap_mpjpeg_decoder.patch  # [win]
+    - detection_based_filter.patch  # [win]
+    - python3.patch  # [win and py34]
+    - python2.patch  # [win and py27]
+
+requirements:
+  build:
+   - python
+   - wget 1.16.3  # [win]
+   - cmake 3.3.0  # [win]
+   - numpy
+   - eigen
+   - tbb  # [osx]
+   - msinttypes  # [win]
+
+  run:
+   - python
+   - numpy
+   - tbb  # [osx]
+
+test:
+  imports:
+    - cv2
+    - cv2.xfeatures2d
+
+about:
+  home: http://opencv.org/
+  license: BSD
