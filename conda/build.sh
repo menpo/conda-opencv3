@@ -90,7 +90,7 @@ if [ $IS_OSX -eq 1 ]; then
     # Fix the lib prefix for the cv2.so
     # Borrowed from
     # http://answers.opencv.org/question/4134/cmake-install_name_tool-absolute-path-for-library-on-mac-osx/
-    find ${SP_DIR} -type f -name "cv2.so" -print0 | while IFS="" read -r -d "" dylibpath; do
+    find ${SP_DIR} -type f -name "cv2*.so" -print0 | while IFS="" read -r -d "" dylibpath; do
     echo install_name_tool -id "$dylibpath" "$dylibpath"
         install_name_tool -id "$dylibpath" "$dylibpath"
         otool -L $dylibpath | grep libopencv | tr -d ':' | while read -a libs ; do
