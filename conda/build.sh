@@ -39,9 +39,6 @@ cd opencv_contrib
 git checkout tags/$PKG_VERSION
 cd ..
 
-# Patch OpenCV Contrib
-patch -p0 < $RECIPE_DIR/lsddetector_pow.patch
-
 cmake .. -G"$CMAKE_GENERATOR"                                            \
     $TBB                                                                 \
     $OPENMP                                                              \
