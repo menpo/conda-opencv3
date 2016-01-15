@@ -1,5 +1,5 @@
---- opencv_contrib-3.0.0\modules\ximgproc\src\seeds.cpp
-+++ opencv_contrib-3.0.0\modules\ximgproc\src\seeds.cpp
+--- opencv_contrib\modules\ximgproc\src\seeds.cpp
++++ opencv_contrib\modules\ximgproc\src\seeds.cpp
 @@ -256,8 +256,8 @@
          seeds_wf = (float)width / num_superpixels_w / (1<<(seeds_nr_levels-1));
          seeds_hf = (float)height / num_superpixels_h / (1<<(seeds_nr_levels-1));

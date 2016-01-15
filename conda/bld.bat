@@ -1,101 +1,115 @@
-@echo off
-
-echo "Copying stdint.h for windows"
-cp "%LIBRARY_INC%\stdint.h" "modules\videoio\src\stdint.h"
-
 mkdir build
+
+set "FORWARD_SLASHED_PREFIX=%PREFIX:\=/%"
+set "FORWARD_SLASHED_LIBRARY_PREFIX=%LIBRARY_PREFIX:\=/%"
+set "FORWARD_SLASHED_SRC_DIR=%SRC_DIR:\=/%"
+
+for /f "delims=" %%A in ('%PREFIX%\python -c "import sys; print(sys.version_info.major)"') DO SET PY_MAJOR=%%A
+
+git clone https://github.com/Itseez/opencv_contrib
+cd opencv_contrib
+git checkout tags/%PKG_VERSION%
+cd ..
+set "EXTRA=-DOPENCV_EXTRA_MODULES_PATH=%FORWARD_SLASHED_SRC_DIR%/opencv_contrib/modules"
+
+IF %PY_MAJOR% EQU 3 (GOTO :PY3) else (GOTO :PY2)
+
+:PY3
+    REM Get python minor version by running a short script:
+    for /f "delims=" %%A in ('python -c "import sys; print(sys.version_info.minor)"') DO SET PY_MINOR=%%A
+    GOTO :NOTCPP11
+
+:PY2
+    REM Assume 2.7
+    set PY_MINOR=7
+    
+    echo "Copying stdint.h for windows"
+    copy "%LIBRARY_INC%\stdint.h" %SRC_DIR%\modules\calib3d\include\stdint.h
+    copy "%LIBRARY_INC%\stdint.h" %SRC_DIR%\modules\videoio\include\stdint.h
+    copy "%LIBRARY_INC%\stdint.h" %SRC_DIR%\modules\highgui\include\stdint.h
+    
+    GOTO :NOTCPP11
+    
+:NOTCPP11
+    git apply --whitespace=fix -p0 "%RECIPE_DIR%\binary_descriptor.patch"
+    git apply --whitespace=fix -p0 "%RECIPE_DIR%\bitops.patch"
+    git apply --whitespace=fix -p0 "%RECIPE_DIR%\daisy.patch"
+    git apply --whitespace=fix -p0 "%RECIPE_DIR%\lsddetector_pow.patch"
+    git apply --whitespace=fix -p0 "%RECIPE_DIR%\saliency.patch"
+    git apply --whitespace=fix -p0 "%RECIPE_DIR%\seeds.patch"
+    git apply --whitespace=fix -p0 "%RECIPE_DIR%\transientareassegmentationmodule.patch"
+
+:PYTHON_SETUP
+
+set PY_LIB=python%PY_MAJOR%%PY_MINOR%.lib
+
+:: These are here to map cl.exe version numbers, which we use to figure out which
+::   compiler we are using, and which compiler consumers of Qt need to use, to MSVC
+::   year numbers, which is how qt identifies MSVC versions.
+:: Update this with any new MSVC compiler you might use.
+echo @echo 15=9 2008> msvc_versions.bat
+echo @echo 16=10 2010>> msvc_versions.bat
+echo @echo 19=14 2015>> msvc_versions.bat
+
+for /f "delims=" %%A in ('cl /? 2^>^&1 ^| findstr /C:"Version"') do set "CL_TEXT=%%A"
+FOR /F "tokens=1,2 delims==" %%i IN ('msvc_versions.bat') DO echo %CL_TEXT% | findstr /C:"Version %%i" > nul && set VSTRING=%%j && goto FOUND
+EXIT 1
+:FOUND
+
+if "%ARCH%" == "64" (
+   set "VSTRING=%VSTRING%Win64"
+)
+
+call :TRIM VSTRING %VSTRING%
+
 cd build
 
-if %ARCH%==32 (
-  set CMAKE_CONFIG="Release"
-  set OPENCV_ARCH=x86
+cmake -LAH -G "Visual Studio %VSTRING%"^
+ -DWITH_EIGEN=ON^
+ -DWITH_CUDA=OFF^
+ -DWITH_OPENCL=OFF^
+ -DWITH_VTK=OFF^
+ -DWITH_OPENNI=OFF^
+ -DCMAKE_BUILD_TYPE=Release^
+ -DBUILD_TESTS=OFF^
+ -DBUILD_PERF_TESTS=OFF^
+ -DBUILD_DOCS=OFF^
+ -DCMAKE_INSTALL_PREFIX=%FORWARD_SLASHED_LIBRARY_PREFIX%^
+ -DEXECUTABLE_OUTPUT_PATH=%FORWARD_SLASHED_LIBRARY_PREFIX%/bin^
+ -DLIBRARY_OUTPUT_PATH=%FORWARD_SLASHED_LIBRARY_PREFIX%/lib^
+ -DPYTHON%PY_MAJOR%_EXECUTABLE=%FORWARD_SLASHED_PREFIX%/python^
+ -DPYTHON_INCLUDE_DIR=%FORWARD_SLASHED_PREFIX%/include^
+ -DPYTHON_PACKAGES_PATH=%FORWARD_SLASHED_PREFIX%/Lib/site-packages/^
+ -DPYTHON_LIBRARY=%FORWARD_SLASHED_PREFIX%/libs/%PY_LIB%^
+ -DPYTHON%PY_MAJOR%_NUMPY_INCLUDE_DIRS=%FORWARD_SLASHED_PREFIX%/Lib/site-packages/numpy/core/include^
+ -DCMAKE_INSTALL_PREFIX=%FORWARD_SLASHED_LIBRARY_PREFIX%^
+ %EXTRA%^
+ ..
 
-  if %PY_VER% LSS 3 (
-    set OPENCV_VC=vc9
-    set CMAKE_GENERATOR="Visual Studio 9 2008"
-  ) else (
-    set OPENCV_VC=vc10
-	set CMAKE_GENERATOR="Visual Studio 10"
-  )
+if errorlevel 1 exit 1
+
+for /F "tokens=1" %%A in ("%VSTRING%") do set VC_VER=%%A
+
+cmake --build . --target INSTALL --config Release
+
+if errorlevel 1 exit 1
+
+if "%ARCH%" == "64" (
+     robocopy %LIBRARY_PREFIX%\x64\vc%VC_VER%\ %LIBRARY_PREFIX%\ *.* /E
+   ) else (
+     robocopy %LIBRARY_PREFIX%\x86\vc%VC_VER%\ %LIBRARY_PREFIX%\ *.* /E
 )
-if %ARCH%==64 (
-  set CMAKE_CONFIG="Release"
-  set OPENCV_ARCH=x64
+if %ERRORLEVEL% GEQ 8 exit 1
 
-  if %PY_VER% LSS 3 (
-    set OPENCV_VC=vc9
-    set CMAKE_GENERATOR="Visual Studio 9 2008 Win64"
-  ) else (
-    set OPENCV_VC=vc10
-	set CMAKE_GENERATOR="Visual Studio 10 Win64"
-  )
-)
+RD /S /Q "%LIBRARY_PREFIX%\bin\Release"
+RD /S /Q "%LIBRARY_PREFIX%\bin\Debug"
+RD /S /Q "%LIBRARY_PREFIX%\x64"
+RD /S /Q "%LIBRARY_PREFIX%\x86"
+RD /S /Q "%SRC_DIR%\opencv_contrib"
+exit 0
 
-set PY_VER_NO_DOT=%PY_VER:.=%
-set PY_LIBRARY="%PREFIX%\libs\python%PY_VER_NO_DOT%.lib"
-set PY_LIBRARY=%PY_LIBRARY:\=/%
-
-set PY_INCLUDE_PATH="%PREFIX%\include"
-set PY_INCLUDE_PATH=%PY_INCLUDE_PATH:\=/%
-
-set PY_SP_DIR="%SP_DIR%"
-set PY_SP_DIR=%PY_SP_DIR:\=/%
-
-set PY_EXEC="%PYTHON%"
-set PY_EXEC=%PY_EXEC:\=/%
-
-if %PY3K%==1 (
-  set OCV_PYTHON="-DBUILD_opencv_python3=1 -DPYTHON_EXECUTABLE=%PY_EXEC%"
-) else (
-  set OCV_PYTHON="-DBUILD_opencv_python2=1 -DPYTHON_EXECUTABLE=%PY_EXEC%"
-)
-
-rem wget the contrib package
-"%LIBRARY_BIN%\wget.exe" -O contrib.tar.gz https://github.com/Itseez/opencv_contrib/archive/3.0.0.tar.gz --no-check-certificate
-rem Copy a cached version for speed
-rem copy ..\..\..\src_cache\contrib.tar.gz contrib.tar.gz
-rem TODO: Check SHA256 of downloaded contrib package
-rem if [ $(shasum -a 256 "contrib.tar.gz") != "8fa18564447a821318e890c7814a262506dd72aaf7721c5afcf733e413d2e12b" ]; then
-rem     exit 1
-rem fi
-tar -xzf contrib.tar.gz
-
-patch -p0 < %RECIPE_DIR%\binary_descriptor.patch
-patch -p0 < %RECIPE_DIR%\bitops.patch
-patch -p0 < %RECIPE_DIR%\daisy.patch
-patch -p0 < %RECIPE_DIR%\lsddetector_pow.patch
-patch -p0 < %RECIPE_DIR%\saliency.patch
-patch -p0 < %RECIPE_DIR%\seeds.patch
-patch -p0 < %RECIPE_DIR%\transientareassegmentationmodule.patch
-
-cmake .. -G%CMAKE_GENERATOR%                                   ^
-    -DWITH_EIGEN=1                                             ^
-    -DBUILD_TESTS=0                                            ^
-    -DBUILD_DOCS=0                                             ^
-    -DBUILD_PERF_TESTS=0                                       ^
-    -DBUILD_ZLIB=1                                             ^
-    -DBUILD_TIFF=1                                             ^
-    -DBUILD_PNG=1                                              ^
-    -DBUILD_OPENEXR=1                                          ^
-    -DBUILD_JASPER=1                                           ^
-    -DBUILD_JPEG=1                                             ^
-    -DWITH_CUDA=0                                              ^
-    -DWITH_OPENCL=0                                            ^
-    -DWITH_OPENNI=0                                            ^
-    -DWITH_FFMPEG=0                                            ^
-    %OCV_PYTHON%                                               ^
-    -DOPENCV_EXTRA_MODULES_PATH="opencv_contrib-3.0.0\modules" ^
-    -DCMAKE_INSTALL_PREFIX="%LIBRARY_PREFIX%"
-
-cmake --build . --config %CMAKE_CONFIG% --target ALL_BUILD
-cmake --build . --config %CMAKE_CONFIG% --target INSTALL
-
-rem Let's just move the files around to a more sane structure (flat)
-move "%LIBRARY_PREFIX%\%OPENCV_ARCH%\%OPENCV_VC%\bin\*.dll" "%LIBRARY_LIB%"
-move "%LIBRARY_PREFIX%\%OPENCV_ARCH%\%OPENCV_VC%\bin\*.exe" "%LIBRARY_BIN%"
-move "%LIBRARY_PREFIX%\%OPENCV_ARCH%\%OPENCV_VC%\lib\*.lib" "%LIBRARY_LIB%"
-rmdir "%LIBRARY_PREFIX%\%OPENCV_ARCH%" /S /Q
-
-rem By default cv.py is installed directly in site-packages
-rem Therefore, we have to copy all of the dlls directly into it!
-xcopy "%LIBRARY_LIB%\opencv*.dll" "%SP_DIR%"
+:TRIM
+  SetLocal EnableDelayedExpansion
+  set Params=%*
+  for /f "tokens=1*" %%a in ("!Params!") do EndLocal & set %1=%%b
+  exit /B

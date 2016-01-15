@@ -9,19 +9,17 @@ source:
   
   patches:
     - cap_mpjpeg_decoder.patch  # [win]
-    - detection_based_filter.patch  # [win]
-    - python3.patch  # [win and py34]
-    - python2.patch  # [win and py27]
+    - detection_based_filter.patch  # [win and py27]
+    - no_rpath.patch
 
 requirements:
   build:
    - python
-   - wget 1.16.3  # [win]
-   - cmake 3.3.0  # [win]
+   - cmake
    - numpy
-   - eigen 3.2.2
+   - eigen 3.2.7
    - tbb 4.3_20141023  # [osx]
-   - msinttypes r26  # [win]
+   - msinttypes r26  # [win and py<35]
 
   run:
    - python

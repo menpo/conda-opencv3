@@ -1,5 +1,5 @@
---- opencv_contrib-3.0.0\modules\line_descriptor\src\binary_descriptor.cpp
-+++ opencv_contrib-3.0.0\modules\line_descriptor\src\binary_descriptor.cpp
+--- opencv_contrib\modules\line_descriptor\src\binary_descriptor.cpp
++++ opencv_contrib\modules\line_descriptor\src\binary_descriptor.cpp
 @@ -50,6 +50,7 @@
  #define LeftDir     4
  #define TryTime     6
