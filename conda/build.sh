@@ -34,7 +34,7 @@ else
     OCV_PYTHON="-DBUILD_opencv_python2=1 -DPYTHON2_EXECUTABLE=$PYTHON -DPYTHON2_INCLUDE_DIR=$PREFIX/include/python${PY_VER} -DPYTHON2_LIBRARY=${PREFIX}/lib/libpython${PY_VER}.${DYNAMIC_EXT} -DPYTHON_INCLUDE_DIR2=$PREFIX/include/python${PY_VER}"
 fi
 
-git clone --reference "/home/pts08/gits/opencv_contrib" https://github.com/Itseez/opencv_contrib
+git clone https://github.com/Itseez/opencv_contrib
 cd opencv_contrib
 git checkout tags/$PKG_VERSION
 cd ..
