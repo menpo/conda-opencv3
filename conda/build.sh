@@ -7,8 +7,6 @@ CMAKE_ARCH="-m"$ARCH
 SHORT_OS_STR=$(uname -s)
 
 if [ "${SHORT_OS_STR:0:5}" == "Linux" ]; then
-    export CFLAGS="$CFLAGS $CMAKE_ARCH"
-    export LDFLAGS="$LDFLAGS $CMAKE_ARCH"
     DYNAMIC_EXT="so"
     TBB=""
     OPENMP="-DWITH_OPENMP=1"
@@ -36,18 +34,12 @@ else
     OCV_PYTHON="-DBUILD_opencv_python2=1 -DPYTHON2_EXECUTABLE=$PYTHON -DPYTHON2_INCLUDE_DIR=$PREFIX/include/python${PY_VER} -DPYTHON2_LIBRARY=${PREFIX}/lib/libpython${PY_VER}.${DYNAMIC_EXT} -DPYTHON_INCLUDE_DIR2=$PREFIX/include/python${PY_VER}"
 fi
 
-export CFLAGS="-I$PREFIX/include -fPIC $CFLAGS"
-export LDFLAGS="-L$PREFIX/lib $LDFLAGS"
+git clone --reference "/home/pts08/gits/opencv_contrib" https://github.com/Itseez/opencv_contrib
+cd opencv_contrib
+git checkout tags/$PKG_VERSION
+cd ..
 
-# wget the contrib package
-wget -O contrib.tar.gz https://github.com/Itseez/opencv_contrib/archive/3.0.0.tar.gz
-# Copy a cached version for speed
-#cp ../../../src_cache/contrib.tar.gz contrib.tar.gz
-if [ $(shasum -a 256 "contrib.tar.gz") != "8fa18564447a821318e890c7814a262506dd72aaf7721c5afcf733e413d2e12b" ]; then
-    exit 1
-fi
-tar -xzf contrib.tar.gz
-# Seems to be some error with a pow overload - so I just patch it here.
+# Patch OpenCV Contrib
 patch -p0 < $RECIPE_DIR/lsddetector_pow.patch
 
 cmake .. -G"$CMAKE_GENERATOR"                                            \
@@ -68,7 +60,8 @@ cmake .. -G"$CMAKE_GENERATOR"                                            \
     -DWITH_OPENCL=0                                                      \
     -DWITH_OPENNI=0                                                      \
     -DWITH_FFMPEG=0                                                      \
-    -DOPENCV_EXTRA_MODULES_PATH="opencv_contrib-3.0.0/modules"           \
+    -DOPENCV_EXTRA_MODULES_PATH="opencv_contrib/modules"                 \
+    -DCMAKE_SKIP_RPATH:bool=ON                                           \
     -DCMAKE_INSTALL_PREFIX=$PREFIX
 make -j${CPU_COUNT}
 make install
