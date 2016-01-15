@@ -9,8 +9,11 @@ source:
   
   patches:
     - cap_mpjpeg_decoder.patch  # [win]
-    - detection_based_filter.patch  # [win and py27]
+    - detection_based_filter.patch  # [win]
     - no_rpath.patch
+    
+build:
+  number: 1
 
 requirements:
   build:
