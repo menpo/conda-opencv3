@@ -1,5 +1,5 @@
---- opencv_contrib-3.0.0\modules\xfeatures2d\src\daisy.cpp
-+++ opencv_contrib-3.0.0\modules\xfeatures2d\src\daisy.cpp
+--- opencv_contrib\modules\xfeatures2d\src\daisy.cpp
++++ opencv_contrib\modules\xfeatures2d\src\daisy.cpp
 @@ -53,6 +53,8 @@
  #include <fstream>
  #include <stdlib.h>

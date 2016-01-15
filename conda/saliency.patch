@@ -1,5 +1,5 @@
---- opencv_contrib-3.0.0\modules\saliency\src\motionSaliencyBinWangApr2014.cpp
-+++ opencv_contrib-3.0.0\modules\saliency\src\motionSaliencyBinWangApr2014.cpp
+--- opencv_contrib\modules\saliency\src\motionSaliencyBinWangApr2014.cpp
++++ opencv_contrib\modules\saliency\src\motionSaliencyBinWangApr2014.cpp
 @@ -39,6 +39,7 @@
   //
   //M*/

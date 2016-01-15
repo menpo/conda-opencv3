@@ -1,5 +1,5 @@
---- opencv_contrib-3.0.0\modules\line_descriptor\src\bitops.hpp
-+++ opencv_contrib-3.0.0\modules\line_descriptor\src\bitops.hpp
+--- opencv_contrib\modules\line_descriptor\src\bitops.hpp
++++ opencv_contrib\modules\line_descriptor\src\bitops.hpp
 @@ -101,7 +101,7 @@
    UINT64 temp = 0x0;
    int nbits = 0;

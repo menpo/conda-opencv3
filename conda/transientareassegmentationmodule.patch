@@ -1,5 +1,5 @@
---- opencv_contrib-3.0.0\modules\bioinspired\src\transientareassegmentationmodule.cpp
-+++ opencv_contrib-3.0.0\modules\bioinspired\src\transientareassegmentationmodule.cpp
+--- opencv_contrib\modules\bioinspired\src\transientareassegmentationmodule.cpp
++++ opencv_contrib\modules\bioinspired\src\transientareassegmentationmodule.cpp
 @@ -454,7 +454,7 @@
  
      // first square the input in order to increase the signal to noise ratio

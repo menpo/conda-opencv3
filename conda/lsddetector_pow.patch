@@ -1,5 +1,5 @@
---- opencv_contrib-3.0.0/modules/line_descriptor/src/LSDDetector.cpp
-+++ opencv_contrib-3.0.0/modules/line_descriptor/src/LSDDetector.cpp
+--- opencv_contrib/modules/line_descriptor/src/LSDDetector.cpp
++++ opencv_contrib/modules/line_descriptor/src/LSDDetector.cpp
 @@ -179,7 +179,7 @@
        kl.sPointInOctaveY = (float) extremes[1];
        kl.ePointInOctaveX = (float) extremes[2];
