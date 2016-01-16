@@ -16,7 +16,7 @@ IF %PY_MAJOR% EQU 3 (GOTO :PY3) else (GOTO :PY2)
 
 :PY3
     REM Get python minor version by running a short script:
-    for /f "delims=" %%A in ('python -c "import sys; print(sys.version_info.minor)"') DO SET PY_MINOR=%%A
+    for /f "delims=" %%A in ('%PREFIX%\python -c "import sys; print(sys.version_info.minor)"') DO SET PY_MINOR=%%A
     GOTO :NOTCPP11
 
 :PY2
