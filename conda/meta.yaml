@@ -15,6 +15,7 @@ requirements:
   build:
    - python
    - cmake
+   - hdf5 1.8.15.1  # [osx]
    - numpy
    - eigen 3.2.7
    - tbb 4.3_20141023  # [osx]
@@ -23,6 +24,7 @@ requirements:
   run:
    - python
    - numpy
+   - hdf5 1.8.15.1  # [osx]
    - tbb 4.3_20141023  # [osx]
 
 test:
