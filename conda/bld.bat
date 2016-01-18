@@ -31,13 +31,9 @@ IF %PY_MAJOR% EQU 3 (GOTO :PY3) else (GOTO :PY2)
     GOTO :NOTCPP11
     
 :NOTCPP11
-    git apply --whitespace=fix -p0 "%RECIPE_DIR%\binary_descriptor.patch"
-    git apply --whitespace=fix -p0 "%RECIPE_DIR%\bitops.patch"
-    git apply --whitespace=fix -p0 "%RECIPE_DIR%\daisy.patch"
-    git apply --whitespace=fix -p0 "%RECIPE_DIR%\lsddetector_pow.patch"
-    git apply --whitespace=fix -p0 "%RECIPE_DIR%\saliency.patch"
-    git apply --whitespace=fix -p0 "%RECIPE_DIR%\seeds.patch"
-    git apply --whitespace=fix -p0 "%RECIPE_DIR%\transientareassegmentationmodule.patch"
+    git apply --whitespace=fix -p0 "%RECIPE_DIR%\kcftracker.patch"
+    git apply --whitespace=fix -p0 "%RECIPE_DIR%\ocr_beamsearch_decoder.patch"
+    git apply --whitespace=fix -p0 "%RECIPE_DIR%\ocr_hmm_decoder.patch"
 
 :PYTHON_SETUP
 

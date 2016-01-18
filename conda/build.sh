@@ -11,6 +11,10 @@ if [ "${SHORT_OS_STR:0:5}" == "Linux" ]; then
     TBB=""
     OPENMP="-DWITH_OPENMP=1"
     IS_OSX=0
+    # There's a bug with CMake at the moment whereby it can't download
+    # using HTTPS - so we use curl to download the IPP library
+    mkdir -p $SRC_DIR/3rdparty/ippicv/downloads/linux-808b791a6eac9ed78d32a7666804320e
+    curl -L https://raw.githubusercontent.com/Itseez/opencv_3rdparty/81a676001ca8075ada498583e4166079e5744668/ippicv/ippicv_linux_20151201.tgz -o $SRC_DIR/3rdparty/ippicv/downloads/linux-808b791a6eac9ed78d32a7666804320e/ippicv_linux_20151201.tgz
 fi
 if [ "${SHORT_OS_STR}" == "Darwin" ]; then
     IS_OSX=1
@@ -39,9 +43,6 @@ cd opencv_contrib
 git checkout tags/$PKG_VERSION
 cd ..
 
-# Patch OpenCV Contrib
-patch -p0 < $RECIPE_DIR/lsddetector_pow.patch
-
 cmake .. -G"$CMAKE_GENERATOR"                                            \
     $TBB                                                                 \
     $OPENMP                                                              \
@@ -60,46 +61,11 @@ cmake .. -G"$CMAKE_GENERATOR"                                            \
     -DWITH_OPENCL=0                                                      \
     -DWITH_OPENNI=0                                                      \
     -DWITH_FFMPEG=0                                                      \
+    -DWITH_VTK=0                                                         \
+    -DINSTALL_C_EXAMPLES=0                                               \
     -DOPENCV_EXTRA_MODULES_PATH="opencv_contrib/modules"                 \
     -DCMAKE_SKIP_RPATH:bool=ON                                           \
     -DCMAKE_INSTALL_PREFIX=$PREFIX
 make -j${CPU_COUNT}
 make install
 
-
-if [ $IS_OSX -eq 1 ]; then
-    # Fix the lib prefix for the libraries
-    # Borrowed from
-    # http://answers.opencv.org/question/4134/cmake-install_name_tool-absolute-path-for-library-on-mac-osx/
-    CV_LIB_PATH=$PREFIX/lib
-    find ${CV_LIB_PATH} -type f -name "libopencv*.dylib" -print0 | while IFS="" read -r -d "" dylibpath; do
-        echo install_name_tool -id "$dylibpath" "$dylibpath"
-        install_name_tool -id "$dylibpath" "$dylibpath"
-        otool -L $dylibpath | grep libopencv | tr -d ':' | while read -a libs ; do
-            [ "${file}" != "${libs[0]}" ] && install_name_tool -change ${libs[0]} `basename ${libs[0]}` $dylibpath
-        done
-    done
-
-    # Fix the lib prefix for the cv2.so
-    # Borrowed from
-    # http://answers.opencv.org/question/4134/cmake-install_name_tool-absolute-path-for-library-on-mac-osx/
-    find ${SP_DIR} -type f -name "cv2*.so" -print0 | while IFS="" read -r -d "" dylibpath; do
-    echo install_name_tool -id "$dylibpath" "$dylibpath"
-        install_name_tool -id "$dylibpath" "$dylibpath"
-        otool -L $dylibpath | grep libopencv | tr -d ':' | while read -a libs ; do
-            [ "${file}" != "${libs[0]}" ] && install_name_tool -change ${libs[0]} `basename ${libs[0]}` $dylibpath
-        done
-    done
-
-    # Fix the lib prefix for the binaries
-    # Borrowed from
-    # http://answers.opencv.org/question/4134/cmake-install_name_tool-absolute-path-for-library-on-mac-osx/
-    CV_BIN_PATH=$PREFIX/bin
-    find ${CV_BIN_PATH} -type f -name "opencv*" -print0 | while IFS="" read -r -d "" dylibpath; do
-        echo install_name_tool -id "$dylibpath" "$dylibpath"
-        install_name_tool -id "$dylibpath" "$dylibpath"
-        otool -L $dylibpath | grep libopencv | tr -d ':' | while read -a libs ; do
-            [ "${file}" != "${libs[0]}" ] && install_name_tool -change ${libs[0]} `basename ${libs[0]}` $dylibpath
-        done
-    done
-fi
