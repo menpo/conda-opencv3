@@ -15,17 +15,17 @@ requirements:
   build:
    - python
    - cmake
-   - hdf5 1.8.15.1  # [osx]
-   - numpy
-   - eigen 3.2.7
-   - tbb 4.3_20141023  # [osx]
+   - hdf5 1.8.*      # [osx]
+   - numpy >=1.10
+   - eigen 3.*
+   - tbb 4.3*        # [osx]
    - msinttypes r26  # [win and py<35]
 
   run:
    - python
-   - numpy
-   - hdf5 1.8.15.1  # [osx]
-   - tbb 4.3_20141023  # [osx]
+   - numpy >=1.10
+   - hdf5 1.8.*  # [osx]
+   - tbb 4.3*    # [osx]
 
 test:
   imports:
