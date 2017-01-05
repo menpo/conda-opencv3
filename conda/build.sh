@@ -9,8 +9,6 @@ if [ "${SHORT_OS_STR}" == "Darwin" ]; then
     OPENMP=""
 fi
 
-INC_PYTHON="${PREFIX}/include/python${PY_VER}"
-
 curl -L -O "https://github.com/opencv/opencv_contrib/archive/$PKG_VERSION.tar.gz"
 test `openssl sha256 $PKG_VERSION.tar.gz | awk '{print $2}'` = "1e2bb6c9a41c602904cc7df3f8fb8f98363a88ea564f2a087240483426bf8cbe"
 tar -zxf $PKG_VERSION.tar.gz
