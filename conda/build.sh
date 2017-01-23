@@ -40,9 +40,6 @@ export CXXFLAGS="$CXXFLAGS -I$PREFIX/include"
 
 cmake .. -LAH                                                             \
     $OPENMP                                                               \
-    -DOpenBLAS=1                                                          \
-    -DOpenBLAS_INCLUDE_DIR=$PREFIX/include                                \
-    -DOpenBLAS_LIB=$PREFIX/lib/libopenblas$SHLIB_EXT                      \
     -DWITH_EIGEN=1                                                        \
     -DBUILD_TESTS=0                                                       \
     -DBUILD_DOCS=0                                                        \
@@ -60,10 +57,6 @@ cmake .. -LAH                                                             \
     -DJPEG_LIBRARY=$PREFIX/lib/libjpeg$SHLIB_EXT                          \
     -DTIFF_INCLUDE_DIR=$PREFIX/include                                    \
     -DTIFF_LIBRARY=$PREFIX/lib/libtiff$SHLIB_EXT                          \
-    -DJASPER_INCLUDE_DIR=$PREFIX/include                                  \
-    -DJASPER_LIBRARY_RELEASE=$PREFIX/lib/libjasper$SHLIB_EXT              \
-    -DWEBP_INCLUDE_DIR=$PREFIX/include                                    \
-    -DWEBP_LIBRARY=$PREFIX/lib/libwebp$SHLIB_EXT                          \
     -DHARFBUZZ_LIBRARIES=$PREFIX/lib/libharfbuzz$SHLIB_EXT                \
     -DZLIB_LIBRARY_RELEASE=$PREFIX/lib/libz$SHLIB_EXT                     \
     -DZLIB_INCLUDE_DIR=$PREFIX/include                                    \
@@ -71,9 +64,10 @@ cmake .. -LAH                                                             \
     -DBUILD_TIFF=0                                                        \
     -DBUILD_PNG=0                                                         \
     -DBUILD_OPENEXR=1                                                     \
-    -DBUILD_JASPER=0                                                      \
+    -DBUILD_JASPER=1                                                      \
     -DBUILD_JPEG=0                                                        \
     -DWITH_CUDA=0                                                         \
+    -DWITH_WEBP=0                                                         \
     -DWITH_OPENCL=0                                                       \
     -DWITH_OPENNI=0                                                       \
     -DWITH_FFMPEG=0                                                       \
