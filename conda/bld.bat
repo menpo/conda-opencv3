@@ -30,11 +30,6 @@ IF %PY_MAJOR% EQU 3 (GOTO :PY3) else (GOTO :PY2)
     
     GOTO :NOTCPP11
     
-:NOTCPP11
-    git apply --whitespace=fix -p0 "%RECIPE_DIR%\kcftracker.patch"
-    git apply --whitespace=fix -p0 "%RECIPE_DIR%\ocr_beamsearch_decoder.patch"
-    git apply --whitespace=fix -p0 "%RECIPE_DIR%\ocr_hmm_decoder.patch"
-
 :PYTHON_SETUP
 
 set PY_LIB=python%PY_MAJOR%%PY_MINOR%.lib
