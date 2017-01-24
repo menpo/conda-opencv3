@@ -23,7 +23,7 @@ requirements:
     - zlib 1.2.*
     - jpeg 9*
     - libtiff 4.0.*
-    - harfbuzz 0.9.*
+    - harfbuzz 0.9.*        # [unix]
     - libpng >=1.6.23,<1.7
     - msinttypes            # [win and py<35]
 
@@ -33,7 +33,7 @@ requirements:
     - hdf5 1.8.17|1.8.17.*  # [unix]
     - zlib 1.2.*
     - jpeg 9*
-    - harfbuzz 0.9.*
+    - harfbuzz 0.9.*        # [unix]
     - libtiff 4.0.*
     - libpng >=1.6.23,<1.7
 
