@@ -1,71 +1,86 @@
-#!/bin/bash
-mkdir build
-cd build
-
-CMAKE_GENERATOR="Unix Makefiles"
-CMAKE_ARCH="-m"$ARCH
+set +x
 SHORT_OS_STR=$(uname -s)
 
 if [ "${SHORT_OS_STR:0:5}" == "Linux" ]; then
-    DYNAMIC_EXT="so"
-    TBB=""
     OPENMP="-DWITH_OPENMP=1"
-    IS_OSX=0
-    # There's a bug with CMake at the moment whereby it can't download
-    # using HTTPS - so we use curl to download the IPP library
-    mkdir -p $SRC_DIR/3rdparty/ippicv/downloads/linux-808b791a6eac9ed78d32a7666804320e
-    curl -L https://raw.githubusercontent.com/Itseez/opencv_3rdparty/81a676001ca8075ada498583e4166079e5744668/ippicv/ippicv_linux_20151201.tgz -o $SRC_DIR/3rdparty/ippicv/downloads/linux-808b791a6eac9ed78d32a7666804320e/ippicv_linux_20151201.tgz
 fi
 if [ "${SHORT_OS_STR}" == "Darwin" ]; then
-    IS_OSX=1
-    DYNAMIC_EXT="dylib"
     OPENMP=""
-    TBB="-DWITH_TBB=1 -DTBB_LIB_DIR=$PREFIX/lib -DTBB_INCLUDE_DIRS=$PREFIX/include -DTBB_STDDEF_PATH=$PREFIX/include/tbb/tbb_stddef.h"
-
-    # Apparently there is a bug in pthreads that is specific to the case of
-    # building something with a deployment target of 10.6 but with an SDK
-    # that is higher than 10.6. At the moment, on my laptop, I don't have the 10.6
-    # SDK, so I hack around this here by moving the deployment target to 10.7
-    # See here for the bug I'm seeing, which is specific to pthreads, not OpenCV
-    # http://lists.gnu.org/archive/html/bug-gnulib/2013-05/msg00040.html
-    export MACOSX_DEPLOYMENT_TARGET="10.7"
 fi
+
+curl -L -O "https://github.com/opencv/opencv_contrib/archive/$PKG_VERSION.tar.gz"
+test `openssl sha256 $PKG_VERSION.tar.gz | awk '{print $2}'` = "1e2bb6c9a41c602904cc7df3f8fb8f98363a88ea564f2a087240483426bf8cbe"
+tar -zxf $PKG_VERSION.tar.gz
+
+# Contrib has patches that need to be applied
+# https://github.com/opencv/opencv_contrib/issues/919
+git apply -p0 $RECIPE_DIR/opencv_contrib_freetype.patch
+
+mkdir build
+cd build
 
 if [ $PY3K -eq 1 ]; then
-    PY_VER_M="${PY_VER}m"
-    OCV_PYTHON="-DBUILD_opencv_python3=1 -DPYTHON3_EXECUTABLE=$PYTHON -DPYTHON3_INCLUDE_DIR=$PREFIX/include/python${PY_VER_M} -DPYTHON3_LIBRARY=${PREFIX}/lib/libpython${PY_VER_M}.${DYNAMIC_EXT}"
+    PY_MAJOR=3
+    PY_UNSET_MAJOR=2
+    LIB_PYTHON="${PREFIX}/lib/libpython${PY_VER}m${SHLIB_EXT}"
+    INC_PYTHON="$PREFIX/include/python${PY_VER}m"
 else
-    OCV_PYTHON="-DBUILD_opencv_python2=1 -DPYTHON2_EXECUTABLE=$PYTHON -DPYTHON2_INCLUDE_DIR=$PREFIX/include/python${PY_VER} -DPYTHON2_LIBRARY=${PREFIX}/lib/libpython${PY_VER}.${DYNAMIC_EXT} -DPYTHON_INCLUDE_DIR2=$PREFIX/include/python${PY_VER}"
+    PY_MAJOR=2
+    PY_UNSET_MAJOR=3
+    LIB_PYTHON="${PREFIX}/lib/libpython${PY_VER}${SHLIB_EXT}"
+    INC_PYTHON="$PREFIX/include/python${PY_VER}"
 fi
 
-git clone https://github.com/Itseez/opencv_contrib
-cd opencv_contrib
-git checkout tags/$PKG_VERSION
-cd ..
+PYTHON_SETTINGS="-DPYTHON_EXECUTABLE=${PYTHON} -DPYTHON_INCLUDE_DIR=${INC_PYTHON} -DPYTHON_LIBRARY=${LIB_PYTHON} -DPYTHON_PACKAGES_PATH=${SP_DIR} -DBUILD_opencv_python${PY_MAJOR}=1 -DPYTHON${PY_MAJOR}_EXECUTABLE=${PYTHON} -DPYTHON${PY_MAJOR}_INCLUDE_DIR=${INC_PYTHON} -DPYTHON${PY_MAJOR}_NUMPY_INCLUDE_DIRS=${SP_DIR}/numpy/core/include -DPYTHON${PY_MAJOR}_LIBRARY=${LIB_PYTHON} -DPYTHON${PY_MAJOR}_PACKAGES_PATH=${SP_DIR}"
+PYTHON_UNSETTINGS="-DBUILD_opencv_python${PY_UNSET_MAJOR}=0 -DPYTHON${PY_UNSET_MAJOR}_EXECUTABLE= -DPYTHON${PY_UNSET_MAJOR}_INCLUDE_DIR= -DPYTHON${PY_UNSET_MAJOR}_NUMPY_INCLUDE_DIRS= -DPYTHON${PY_UNSET_MAJOR}_LIBRARY= -DPYTHON${PY_UNSET_MAJOR}_PACKAGES_PATH="
 
-cmake .. -G"$CMAKE_GENERATOR"                                            \
-    $TBB                                                                 \
-    $OPENMP                                                              \
-    $OCV_PYTHON                                                          \
-    -DWITH_EIGEN=1                                                       \
-    -DBUILD_TESTS=0                                                      \
-    -DBUILD_DOCS=0                                                       \
-    -DBUILD_PERF_TESTS=0                                                 \
-    -DBUILD_ZLIB=1                                                       \
-    -DBUILD_TIFF=1                                                       \
-    -DBUILD_PNG=1                                                        \
-    -DBUILD_OPENEXR=1                                                    \
-    -DBUILD_JASPER=1                                                     \
-    -DBUILD_JPEG=1                                                       \
-    -DWITH_CUDA=0                                                        \
-    -DWITH_OPENCL=0                                                      \
-    -DWITH_OPENNI=0                                                      \
-    -DWITH_FFMPEG=0                                                      \
-    -DWITH_VTK=0                                                         \
-    -DINSTALL_C_EXAMPLES=0                                               \
-    -DOPENCV_EXTRA_MODULES_PATH="opencv_contrib/modules"                 \
-    -DCMAKE_SKIP_RPATH:bool=ON                                           \
+# For some reason OpenCV just won't see hdf5.h without updating the CFLAGS
+export CFLAGS="$CFLAGS -I$PREFIX/include"
+export CXXFLAGS="$CXXFLAGS -I$PREFIX/include"
+
+cmake .. -LAH                                                             \
+    $OPENMP                                                               \
+    -DWITH_EIGEN=1                                                        \
+    -DBUILD_TESTS=0                                                       \
+    -DBUILD_DOCS=0                                                        \
+    -DBUILD_PERF_TESTS=0                                                  \
+    -DBUILD_ZLIB=0                                                        \
+    -DHDF5_DIR=$PREFIX                                                    \
+    -DHDF5_INCLUDE_DIRS=$PREFIX/include                                   \
+    -DHDF5_C_LIBRARY_hdf5=$PREFIX/lib/libhdf5$SHLIB_EXT                   \
+    -DHDF5_C_LIBRARY_z=$PREFIX/lib/libz$SHLIB_EXT                         \
+    -DFREETYPE_INCLUDE_DIRS=$PREFIX/include/freetype2                     \
+    -DFREETYPE_LIBRARIES=$PREFIX/lib/libfreetype$SHLIB_EXT                \
+    -DPNG_LIBRARY_RELEASE=$PREFIX/lib/libpng$SHLIB_EXT                    \
+    -DPNG_INCLUDE_DIRS=$PREFIX/include                                    \
+    -DJPEG_INCLUDE_DIR=$PREFIX/include                                    \
+    -DJPEG_LIBRARY=$PREFIX/lib/libjpeg$SHLIB_EXT                          \
+    -DTIFF_INCLUDE_DIR=$PREFIX/include                                    \
+    -DTIFF_LIBRARY=$PREFIX/lib/libtiff$SHLIB_EXT                          \
+    -DHARFBUZZ_LIBRARIES=$PREFIX/lib/libharfbuzz$SHLIB_EXT                \
+    -DZLIB_LIBRARY_RELEASE=$PREFIX/lib/libz$SHLIB_EXT                     \
+    -DZLIB_INCLUDE_DIR=$PREFIX/include                                    \
+    -DHDF5_z_LIBRARY_RELEASE=$PREFIX/lib/libz$SHLIB_EXT                   \
+    -DBUILD_TIFF=0                                                        \
+    -DBUILD_PNG=0                                                         \
+    -DBUILD_OPENEXR=1                                                     \
+    -DBUILD_JASPER=1                                                      \
+    -DBUILD_JPEG=0                                                        \
+    -DWITH_CUDA=0                                                         \
+    -DWITH_WEBP=0                                                         \
+    -DWITH_OPENCL=0                                                       \
+    -DWITH_OPENNI=0                                                       \
+    -DWITH_FFMPEG=0                                                       \
+    -DWITH_MATLAB=0                                                       \
+    -DWITH_VTK=0                                                          \
+    -DWITH_GPHOTO2=0                                                      \
+    -DINSTALL_C_EXAMPLES=0                                                \
+     $PYTHON_SETTINGS                                                     \
+     $PYTHON_UNSETTINGS                                                   \
+    -DOPENCV_EXTRA_MODULES_PATH="../opencv_contrib-$PKG_VERSION/modules"  \
+    -DCMAKE_BUILD_TYPE="Release"                                          \
+    -DCMAKE_SKIP_RPATH:bool=ON                                            \
     -DCMAKE_INSTALL_PREFIX=$PREFIX
-make -j${CPU_COUNT}
-make install
 
+make -j8
+make install
