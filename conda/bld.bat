@@ -80,8 +80,6 @@ if %ERRORLEVEL% GEQ 8 exit 1
 
 RD /S /Q "%LIBRARY_PREFIX%\bin\Release"
 RD /S /Q "%LIBRARY_PREFIX%\bin\Debug"
-RD /S /Q "%LIBRARY_PREFIX%\x64"
-RD /S /Q "%LIBRARY_PREFIX%\x86"
 RD /S /Q "%SRC_DIR%\opencv_contrib"
 exit 0
 
